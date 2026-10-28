@@ -109,10 +109,12 @@ class _HomeShellState extends State<HomeShell> {
                       child: const Icon(Icons.flash_on_rounded, color: Colors.white, size: 20),
                     ),
                     const SizedBox(width: 10),
-                    const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('Darling File', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                      Text('闪传', style: TextStyle(fontSize: 11, color: Color(0xFF8FA3B5))),
-                    ]),
+                    const Flexible(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Darling File', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15), overflow: TextOverflow.ellipsis),
+                        Text('闪传', style: TextStyle(fontSize: 11, color: Color(0xFF8FA3B5))),
+                      ]),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 28),
@@ -287,12 +289,19 @@ class _SendPageState extends State<SendPage> {
   final _ipCtrl = TextEditingController();
   String? _msg;
   bool _busy = false;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _poll();
-    Timer.periodic(const Duration(seconds: 3), (_) => _poll());
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) => _poll());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _poll() async {
@@ -532,10 +541,18 @@ class _ReceivePageState extends State<ReceivePage> {
   bool _busy = false;
   List<Map<String, dynamic>> _incoming = [];
 
+  Timer? _timer;
+
   @override
   void initState() {
     super.initState();
-    Timer.periodic(const Duration(seconds: 3), (_) => _poll());
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) => _poll());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _poll() async {
@@ -660,11 +677,19 @@ class HistoryPage extends StatefulWidget {
 class _HistoryPageState extends State<HistoryPage> {
   List<Map<String, dynamic>> _history = [];
 
+  Timer? _timer;
+
   @override
   void initState() {
     super.initState();
     _poll();
-    Timer.periodic(const Duration(seconds: 3), (_) => _poll());
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) => _poll());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _poll() async {
