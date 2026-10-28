@@ -1,0 +1,15 @@
+name: build-darling-file
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v0.1*'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stub
+        run: echo "build steps added after app is ready"

@@ -1,0 +1,24 @@
+# Darling File 中转服务（示例配置，不含真实 secret）
+name = "darling-file-relay"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+account_id = "your-account-id"
+
+[[durable_objects.bindings]]
+name = "RELAY"
+class_name = "Relay"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Relay"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "darling-ai-cloud"
+database_id = "your-d1-database-id"
+
+[vars]
+# 与 Darling AI 主 API 相同的 JWT_SECRET（账号互通）
+JWT_SECRET = "your-jwt-secret"
+PUBLIC_BASE = "https://relay.your-domain.com"

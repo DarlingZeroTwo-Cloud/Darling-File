@@ -1,0 +1,12 @@
+worker/wrangler.toml
+worker/.wrangler/
+*.pkg.tar.zst
+*.tar.gz
+build/
+dist/
+backend/build/
+backend/dist/
+backend/*.spec
+__pycache__/
+*.pyc
+.test/
