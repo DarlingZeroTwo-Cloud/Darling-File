@@ -229,23 +229,54 @@ class LoginDialog extends StatefulWidget {
 class _LoginDialogState extends State<LoginDialog> {
   final _email = TextEditingController();
   final _pass = TextEditingController();
+  final _sq = TextEditingController();
+  final _sa = TextEditingController();
+  bool _register = false;
   bool _busy = false;
   String? _err;
+
+  Future<void> _submit() async {
+    setState(() { _busy = true; _err = null; });
+    final r = _register
+        ? await Api.register(_email.text.trim(), _pass.text, _sq.text.trim(), _sa.text.trim())
+        : await Api.login(_email.text.trim(), _pass.text);
+    setState(() => _busy = false);
+    if (r['ok'] == true) {
+      if (mounted) Navigator.pop(context);
+    } else {
+      setState(() => _err = r['error']?.toString() ?? (_register ? '注册失败' : '登录失败'));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('登录'),
+      title: Text(_register ? '注册账号' : '登录'),
       content: SizedBox(
         width: 360,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('使用 Darling AI 账号直接登录，无需注册', style: TextStyle(fontSize: 12.5, color: Color(0xFF8FA3B5))),
-            const SizedBox(height: 16),
+            const Text('使用 Darling AI 账号体系：注册过的账号可直接登录，无需重复注册', style: TextStyle(fontSize: 12.5, color: Color(0xFF8FA3B5))),
+            const SizedBox(height: 12),
+            SegmentedButton<bool>(
+              segments: const [
+                ButtonSegment(value: false, label: Text('登录'), icon: Icon(Icons.login, size: 15)),
+                ButtonSegment(value: true, label: Text('注册'), icon: Icon(Icons.person_add_alt_1, size: 15)),
+              ],
+              selected: {_register},
+              onSelectionChanged: (v) => setState(() { _register = v.first; _err = null; }),
+            ),
+            const SizedBox(height: 14),
             TextField(controller: _email, decoration: const InputDecoration(labelText: '邮箱', prefixIcon: Icon(Icons.mail_outline, size: 18))),
             const SizedBox(height: 10),
-            TextField(controller: _pass, obscureText: true, decoration: const InputDecoration(labelText: '密码', prefixIcon: Icon(Icons.lock_outline, size: 18))),
+            TextField(controller: _pass, obscureText: true, decoration: const InputDecoration(labelText: '密码（至少 6 位）', prefixIcon: Icon(Icons.lock_outline, size: 18))),
+            if (_register) ...[
+              const SizedBox(height: 10),
+              TextField(controller: _sq, decoration: const InputDecoration(labelText: '安全问题（找回密码用）', prefixIcon: Icon(Icons.help_outline, size: 18))),
+              const SizedBox(height: 10),
+              TextField(controller: _sa, decoration: const InputDecoration(labelText: '安全答案', prefixIcon: Icon(Icons.verified_outlined, size: 18))),
+            ],
             if (_err != null) ...[
               const SizedBox(height: 10),
               Text(_err!, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12.5)),
@@ -256,19 +287,10 @@ class _LoginDialogState extends State<LoginDialog> {
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
         FilledButton(
-          onPressed: _busy ? null : () async {
-            setState(() { _busy = true; _err = null; });
-            final r = await Api.login(_email.text.trim(), _pass.text);
-            setState(() => _busy = false);
-            if (r['ok'] == true) {
-              if (mounted) Navigator.pop(context);
-            } else {
-              setState(() => _err = r['error']?.toString() ?? '登录失败');
-            }
-          },
+          onPressed: _busy ? null : _submit,
           child: _busy
               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('登录'),
+              : Text(_register ? '注册并登录' : '登录'),
         ),
       ],
     );
@@ -312,10 +334,10 @@ class _SendPageState extends State<SendPage> {
   }
 
   Future<void> _pickFiles() async {
-    final res = await FilePicker.platform.pickFiles(allowMultiple: true, withData: false);
-    if (res == null) return;
+    final res = await FilePicker.pickFiles();
+    if (res.isEmpty) return;
     setState(() {
-      for (final f in res.files) {
+      for (final f in res) {
         if (f.path != null) _files.add({'path': f.path!, 'name': f.name, 'size': File(f.path!).lengthSync()});
       }
     });

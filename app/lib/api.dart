@@ -25,6 +25,8 @@ class Api {
 
   static Future<Map<String, dynamic>> login(String email, String password) =>
       _call('/api/login', body: {'email': email, 'password': password}, method: 'POST');
+  static Future<Map<String, dynamic>> register(String email, String password, String securityQ, String securityA) =>
+      _call('/api/register', body: {'email': email, 'password': password, 'security_q': securityQ, 'security_a': securityA}, method: 'POST');
   static Future<Map<String, dynamic>> logout() => _call('/api/logout', method: 'POST');
   static Future<Map<String, dynamic>> me() => _call('/api/me');
   static Future<Map<String, dynamic>> peers() => _call('/api/peers');

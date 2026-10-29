@@ -68,6 +68,16 @@ def http_req(method, url, data=None, token=None, timeout=20):
     except Exception as e:
         return {"error": str(e)}
 
+# ---------------- 注册（复用 Darling AI 账号体系，含安全问题） ----------------
+async def api_register(email, password, security_q, security_a):
+    r = await asyncio.to_thread(http_req, "POST", f"{API_BASE}/api/auth/register",
+        {"email": email, "password": password, "security_q": security_q, "security_a": security_a})
+    if r.get("ok") and r.get("access"):
+        STATE["token"] = r["access"]
+        STATE["user"] = {"email": r.get("email"), "role": r.get("role")}
+        return {"ok": True, "email": r.get("email")}
+    return {"ok": False, "error": r.get("error") or "注册失败"}
+
 # ---------------- 登录（复用 Darling AI 账号） ----------------
 async def api_login(email, password):
     r = await asyncio.to_thread(http_req, "POST", f"{API_BASE}/api/auth/login", {"email": email, "password": password})
@@ -448,6 +458,11 @@ async def make_api():
     async def j(resp, status=200):
         return web.json_response(resp, status=status, headers={"Access-Control-Allow-Origin": "*"})
 
+    async def h_register(request):
+        b = await request.json() or {}
+        return await j(await api_register(b.get("email",""), b.get("password",""),
+                                          b.get("security_q",""), b.get("security_a","")))
+
     async def h_login(request):
         b = await request.json()
         return await j(await api_login(b.get("email",""), b.get("password","")))
@@ -529,6 +544,7 @@ async def make_api():
     async def h_web_stop(request):
         return await j(web_share_stop())
 
+    app.router.add_post("/api/register", h_register)
     app.router.add_post("/api/login", h_login)
     app.router.add_post("/api/logout", h_logout)
     app.router.add_get("/api/me", h_me)
